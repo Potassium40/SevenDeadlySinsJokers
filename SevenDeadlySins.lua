@@ -248,7 +248,7 @@ SMODS.Joker {
 	config = { extra = { Xmult = 1 } },
 	rarity = 1,
 	atlas = 'SevenDeadlySins',
-	pos = { x = 1, y = 1 },
+	pos = { x = 5, y = 0 },
 	cost = 4,
 	loc_vars = function(self, info_queue, card)
 		return { vars = { card.ability.extra.Xmult } }
@@ -292,7 +292,7 @@ SMODS.Joker {
 	config = { extra = { bought_cards = false } },
 	rarity = 2,
 	atlas = 'SevenDeadlySins',
-	pos = { x = 3, y = 1 },
+	pos = { x = 0, y = 1 },
 	cost = 6,
 	loc_vars = function(self, info_queue, card)
 		return { vars = { card.ability.extra.bought_cards } }
