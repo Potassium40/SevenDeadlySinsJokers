@@ -1,0 +1,13 @@
+{
+    "id": "SDSJ",
+    "name": "Deadly Sins",
+    "author": ["Coffee"],
+    "description": "Adds custom jokers based on the seven deadly sins.",
+    "prefix": "sdsj",
+    "main_file": "SevenDeadlySins.lua",
+    "badge_colour": "107d2f",
+    "dependencies": [
+        "Steamodded (>=1.0.0~ALPHA-1225a)"
+    ],
+    "version": "1.0.0"
+}
