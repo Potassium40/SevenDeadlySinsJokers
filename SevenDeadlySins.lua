@@ -23,7 +23,7 @@ SMODS.Joker {
 		name = 'Greed',
 		text = {
 			"When a hand is played,",
-			"lose {C:money}2${}. This joker",
+			"you lose {C:money}2${} and this joker",
 			"gains {C:money}4${} of sell value"
 		}
 	},
@@ -62,7 +62,7 @@ SMODS.Joker {
 			"{C:inactive}(Currently {C:chips}+#1#{C:inactive} Chips)"
 		}
 	},
-	config = { extra = { chips = 0, chip_gain = 10, chip_loss = 50 } },
+	config = { extra = { chips = 0, chip_gain = 2, chip_loss = 20 } },
 	rarity = 1,
 	atlas = 'SevenDeadlySins',
 	pos = { x = 1, y = 0 },
@@ -116,7 +116,7 @@ SMODS.Joker {
 	rarity = 3,
 	atlas = 'SevenDeadlySins',
 	pos = { x = 2, y = 0 },
-	cost = 6,
+	cost = 7,
 	loc_vars = function(self, info_queue, card)
 		info_queue[#info_queue + 1] = G.P_CENTERS.j_lusty_joker
 		return { vars = { card.ability.extra.odds, (G.GAME.probabilities.normal or 1) } }
@@ -156,14 +156,14 @@ SMODS.Joker {
 			"a card, booster pack or voucher"
 		}
 	},
-	config = { extra = { Xmult = 5, Xmult_loss = 0.5 } },
-	rarity = 1,
+	config = { extra = { Xmult = 5, Xmult_loss = 0.5, is_shop = false } },
+	rarity = 2,
 	atlas = 'SevenDeadlySins',
 	pos = { x = 3, y = 0 },
-	cost = 4,
+	cost = 6,
 	eternal_compat = false,
 	loc_vars = function(self, info_queue, card)
-		return { vars = { card.ability.extra.Xmult, card.ability.extra.Xmult_loss } }
+		return { vars = { card.ability.extra.Xmult, card.ability.extra.Xmult_loss, card.ability.extra.is_shop } }
 	end,
 	calculate = function(self, card, context)
 		if context.joker_main then
@@ -172,38 +172,93 @@ SMODS.Joker {
 				Xmult_mod = card.ability.extra.Xmult
 			}
 		end
-		if context.buying_card or context.open_booster then
-			if card.ability.extra.Xmult - card.ability.extra.Xmult_loss <= 1 then 
-				G.E_MANAGER:add_event(Event({
-					func = function()
-						play_sound('tarot1')
-						card.T.r = -0.2
-						card:juice_up(0.3, 0.4)
-						card.states.drag.is = true
-						card.children.center.pinch.x = true
-						G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.3, blockable = false,
-							func = function()
-									G.jokers:remove_card(card)
-									card:remove()
-									card = nil
-								return true; end})) 
-						return true
-					end
-				})) 
-				return {
-					message = "Wrath",
-					colour = G.C.RED
-				}
-			else
-				card.ability.extra.Xmult = card.ability.extra.Xmult - card.ability.extra.Xmult_loss
-				return {
-					message = "Wrath",
-					colour = G.C.RED
-				}
+		--if G.STATE == G.STATES.SHOP then	
+			if context.cardarea == G.jokers and context.buying_card and context.card ~= card then
+				if card.ability.extra.Xmult - card.ability.extra.Xmult_loss <= 1 then 
+					G.E_MANAGER:add_event(Event({
+						func = function()
+							play_sound('tarot1')
+							card.T.r = -0.2
+							card:juice_up(0.3, 0.4)
+							card.states.drag.is = true
+							card.children.center.pinch.x = true
+							G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.3, blockable = false,
+								func = function()
+										G.jokers:remove_card(card)
+										card:remove()
+										card = nil
+									return true; end})) 
+							return true
+						end
+					})) 
+					return {
+						message = "Wrath",
+						colour = G.C.RED
+					}
+				else
+					card.ability.extra.Xmult = card.ability.extra.Xmult - card.ability.extra.Xmult_loss
+					return {
+						message = "Wrath",
+						colour = G.C.RED
+					}
+				end
 			end
+			if context.cardarea == G.jokers and context.open_booster and card.ability.extra.is_shop then
+				if card.ability.extra.Xmult - card.ability.extra.Xmult_loss <= 1 then 
+					G.E_MANAGER:add_event(Event({
+						func = function()
+							play_sound('tarot1')
+							card.T.r = -0.2
+							card:juice_up(0.3, 0.4)
+							card.states.drag.is = true
+							card.children.center.pinch.x = true
+							G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.3, blockable = false,
+								func = function()
+										G.jokers:remove_card(card)
+										card:remove()
+										card = nil
+									return true; end})) 
+							return true
+						end
+					})) 
+					return {
+						message = "Wrath",
+						colour = G.C.RED
+					}
+				else
+					card.ability.extra.Xmult = card.ability.extra.Xmult - card.ability.extra.Xmult_loss
+					return {
+						message = "Wrath",
+						colour = G.C.RED
+					}
+				end
+			end
+		--end
+		if G.STATE == G.STATES.SHOP then
+			card.ability.extra.is_shop = true
+		end
+		if context.ending_shop and not context.blueprint then
+			card.ability.extra.is_shop = false
 		end
 	end
 }
+
+local igo = Game.init_game_object
+function Game:init_game_object()
+	local ret = igo(self)
+	ret.current_round.is_shop = false
+	return ret
+end
+
+function SMODS.current_mod.reset_game_globals(run_start)
+	G.GAME.current_round.is_shop = false
+	if end_of_round and not repetition then
+		G.GAME.current_round.is_shop = true
+	end
+	if ending_shop then
+		G.GAME.current_round.is_shop = false
+	end
+end
 
 
 SMODS.Joker {	
@@ -216,10 +271,10 @@ SMODS.Joker {
 		}
 	},
 	config = { extra = { mult = 4 } },
-	rarity = 2,
+	rarity = 1,
 	atlas = 'SevenDeadlySins',
 	pos = { x = 4, y = 0 },
-	cost = 7,
+	cost = 5,
 	loc_vars = function(self, info_queue, card)
 		return { vars = { card.ability.extra.mult } }
 	end,
@@ -240,16 +295,17 @@ SMODS.Joker {
 		name = 'Pride',
 		text = {
 			"{X:mult,C:white} X#1# {} Mult",
-			"Gains {X:mult,C:white}X1{} Mult when a blind",
+			"Gains {X:mult,C:white}X0.5{} Mult when a blind",
 			"is won in 1 hand. Reset when a blind",
-			"is beaten in more than 1 hand"
+			"is beaten in more than 1 hand or",
+			"a blind is skipped"
 		}
 	},
 	config = { extra = { Xmult = 1 } },
-	rarity = 1,
+	rarity = 3,
 	atlas = 'SevenDeadlySins',
 	pos = { x = 5, y = 0 },
-	cost = 4,
+	cost = 8,
 	loc_vars = function(self, info_queue, card)
 		return { vars = { card.ability.extra.Xmult } }
 	end,
@@ -262,7 +318,7 @@ SMODS.Joker {
 		end
 		if context.end_of_round and not context.repetition and context.game_over == false and not context.blueprint then
 			if G.GAME.current_round.hands_played == 1 then
-				card.ability.extra.Xmult = card.ability.extra.Xmult + 1
+				card.ability.extra.Xmult = card.ability.extra.Xmult + 0.5
 				return {
 					message = "Upgraded!",
 					colour = G.C.MULT
@@ -274,6 +330,13 @@ SMODS.Joker {
 					colour = G.C.BLUE
 				}
 			end
+		end
+		if context.skip_blind then
+			card.ability.extra.Xmult = 1
+			return {
+				message = "Pride",
+				colour = G.C.BLUE
+			}
 		end
 	end
 }
@@ -290,10 +353,10 @@ SMODS.Joker {
 		}
 	},
 	config = { extra = { bought_cards = false } },
-	rarity = 2,
+	rarity = 3,
 	atlas = 'SevenDeadlySins',
 	pos = { x = 0, y = 1 },
-	cost = 6,
+	cost = 7,
 	loc_vars = function(self, info_queue, card)
 		return { vars = { card.ability.extra.bought_cards } }
 	end,
