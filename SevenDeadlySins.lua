@@ -89,13 +89,19 @@ SMODS.Joker {
 				card = card
 			}
 		end
-		if context.other_joker and not context.blueprint and context.other_joker ~= card then
-			card.ability.extra.chips = card.ability.extra.chips + card.ability.extra.chip_gain
-			return {
-				message = 'Upgraded!',
-				colour = G.C.CHIPS,
-				card = card
-			}
+		if context.before and not context.blueprint then
+			local x = -1
+			for i = 1, #G.jokers.cards do
+				if G.jokers.cards[i].ability.set == 'Joker' then x = x + 1 end
+			end
+			card.ability.extra.chips = card.ability.extra.chips + card.ability.extra.chip_gain*x
+			if x>0 then
+				return {
+					message = 'Upgraded!',
+					colour = G.C.CHIPS,
+					card = card
+				}
+			end
 		end
 	end
 }
@@ -243,24 +249,6 @@ SMODS.Joker {
 	end
 }
 
-local igo = Game.init_game_object
-function Game:init_game_object()
-	local ret = igo(self)
-	ret.current_round.is_shop = false
-	return ret
-end
-
-function SMODS.current_mod.reset_game_globals(run_start)
-	G.GAME.current_round.is_shop = false
-	if end_of_round and not repetition then
-		G.GAME.current_round.is_shop = true
-	end
-	if ending_shop then
-		G.GAME.current_round.is_shop = false
-	end
-end
-
-
 SMODS.Joker {	
 	key = 'sloth',
 	loc_txt = {
@@ -282,7 +270,7 @@ SMODS.Joker {
 		if context.joker_main then
 			local currentmult = G.GAME.current_round.discards_left * card.ability.extra.mult + G.GAME.current_round.hands_left * card.ability.extra.mult
 			return {
-				message = localize { type = 'variable', key = 'a_mult', vars = { currentmult } }
+				mult = currentmult
 			}
 		end
 	end
